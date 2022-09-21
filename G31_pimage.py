@@ -23,10 +23,10 @@ if_success = False
 try:
 
     # importing FITS image to a HDU
-    plothdu = fits.open(intensitymap)
+    Ihdu = fits.open(intensitymap)
 
     # editing the FITS image by multiplying a scaling factor
-    plothdu[0].data = plothdu[0].data * intensity_scale
+    Ihdu[0].data = Ihdu[0].data * intensity_scale
 
     if_success = True
 
@@ -37,28 +37,29 @@ except:
 if (if_success == True):
     # Reading FITS header
     try:
-        naxis1 = plothdu[0].header['naxis1']
-        naxis2 = plothdu[0].header['naxis2']
-        crval1 = plothdu[0].header['crval1']
-        crpix1 = plothdu[0].header['crpix1']
-        cdelt1 = plothdu[0].header['cdelt1']
-        crval2 = plothdu[0].header['crval2']
-        crpix2 = plothdu[0].header['crpix2']
-        cdelt2 = plothdu[0].header['cdelt2']
-        hduwcs = wcs.WCS(plothdu[0].header)
+        naxis1 = Ihdu[0].header['naxis1']
+        naxis2 = Ihdu[0].header['naxis2']
+        crval1 = Ihdu[0].header['crval1']
+        crpix1 = Ihdu[0].header['crpix1']
+        cdelt1 = Ihdu[0].header['cdelt1']
+        crval2 = Ihdu[0].header['crval2']
+        crpix2 = Ihdu[0].header['crpix2']
+        cdelt2 = Ihdu[0].header['cdelt2']
+        hduwcs = wcs.WCS(Ihdu[0].header)
     except:
         print('Warning. No coordinate headers')
 
     try:
-        bmaj = plothdu[0].header['bmaj']
-        bmin = plothdu[0].header['bmin']
-        bpa = plothdu[0].header['bpa']
+        bmaj = Ihdu[0].header['bmaj']
+        bmin = Ihdu[0].header['bmin']
+        bpa = Ihdu[0].header['bpa']
     except:
         print('Warnning. No header for synthesized beam size')
 
-value = plothdu[0].data[302][400]
-print(value)
-plothdu .info()
+# pixel values are in Ihdu[0].data[x][y]
+# value = Ihdu[0].data[240][240]
+# print(value)
+# Ihdu .info()
 
 
 def plot_intensity(figsize=[9.0, 9.0],
@@ -67,13 +68,13 @@ def plot_intensity(figsize=[9.0, 9.0],
                    vmax=-999.0, vmin=0.0,
                    cmap='viridis',
                    plot_ticks=True,
-                   tick_font=25,
+                   tick_font=15,
                    tick_ypad=0,
                    plot_colorbar=True,
                    colorbar_location='top',
-                   colorbar_width=0.3, colorbar_pad=0.3, colorbar_font=15,
-                   colorbar_label='Colorbar', colorbar_labelpad=0.3, colorbar_labelfont=20,
-                   ra_center=0, dec_center=0, width=1.0, height=1.0,
+                   colorbar_width=0.2, colorbar_pad=0.1, colorbar_font=15,
+                   colorbar_label='Colorbar', colorbar_labelpad=12, colorbar_labelfont=15,
+                   ra_center=1, dec_center=1, width=1.0, height=1.0,
                    plot_scalebar=False,
                    distance=140.0,
                    scalebar_size=100.0, scalebar_text='100 au',
@@ -84,7 +85,7 @@ def plot_intensity(figsize=[9.0, 9.0],
 
     if_plot = False
     try:
-        fig = aplpy.FITSFigure(plothdu, figsize=(figsize[0], figsize[1]))
+        fig = aplpy.FITSFigure(Ihdu, figsize=(figsize[0], figsize[1]))
         if_plot = True
 
     except:
@@ -92,7 +93,7 @@ def plot_intensity(figsize=[9.0, 9.0],
 
     if (if_plot == True):
         if (vmax == -999.0):
-            vmax = np.nanmax(plothdu[0].data)*1.2
+            vmax = np.nanmax(Ihdu[0].data)*1.2
             vmin = 0.0
 
         fig.show_colorscale(
@@ -105,6 +106,7 @@ def plot_intensity(figsize=[9.0, 9.0],
     fig.tick_labels.set_font(size=tick_font)
     fig.axis_labels.set_font(size=tick_font)
     fig.axis_labels.set_ypad(tick_ypad)
+
     if (plot_ticks != True):
         fig.axis_labels.hide_x()
         fig.axis_labels.hide_y()
@@ -114,7 +116,8 @@ def plot_intensity(figsize=[9.0, 9.0],
     # recentering
     if ((ra_center != 0) or (dec_center != 0)):
         print('recentering')
-        fig.recenter(ra_center, dec_center, width=width, height=height)
+        #fig.recenter(ra_center, dec_center, width=width, height=height)
+        fig.recenter(240, 240, width=0.3, height=0.2)  # degrees
 
     # plot color bar
     if (plot_colorbar == True):
@@ -145,8 +148,8 @@ def plot_intensity(figsize=[9.0, 9.0],
         fig.scalebar.set_font(size=scalebar_font)
         fig.scalebar.set_linewidth(scalebar_linewidth)
 
-    outfigname = 'G31_I'
+    outfigname = 'G31_I.pdf'
     fig.save(outfigname, transparent=True)
 
 
-plot_intensity()
+plot_intensity(colorbar_label='(Jy/beam)')
